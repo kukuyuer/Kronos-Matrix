@@ -61,13 +61,14 @@ streamlit run app.py
 
 📂 目录结构
 
-    app.py: 前端入口
-
-    quant_engine.py: 量化策略核心逻辑
-
-    stock_predictor.py: Kronos 模型推理与绘图
-
-    market_updater.py: 后台数据维护脚本
+*   `app.py`: **[入口]** Web 终端启动文件。
+*   `quant_engine.py`: 量化策略核心（特征工程、信号计算、风控逻辑）。
+*   `stock_predictor.py`: Kronos 模型推理与绘图引擎。
+*   `market_updater.py`: 后台数据维护脚本（负责下载/更新全市场数据）。
+*   `data_layer.py`: 数据清洗与持久化层。
+*   `stock_data_provider.py`: 数据源接口（efinance/AkShare）。
+*   `config_manager.py`: 用户配置管理。
+*   `model/`: Kronos 模型网络结构定义。
 
     data_repo/: 本地数据仓库 (自动生成)
 
