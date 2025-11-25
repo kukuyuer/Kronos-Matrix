@@ -74,13 +74,13 @@ streamlit run app.py
 from huggingface_hub import snapshot_download
 
 # Models
-snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-base")
-snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-mini")
-snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-small")
+snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="/home/Kronos/NeoQuasar/Kronos-base")
+snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="/home/Kronos/NeoQuasar/Kronos-mini")
+snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="/home/Kronos/NeoQuasar/Kronos-small")
 
 # Tokenizers
-snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
-snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-base")
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/Kronos/NeoQuasar/Kronos-Tokenizer-base")
 
 print("Raw model files downloaded successfully!")
 
