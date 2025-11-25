@@ -32,7 +32,7 @@ import config
 repo = DataLayer()
 
 st.set_page_config(page_title="Kronos V20.3 Matrix", layout="wide", page_icon="🌌")
-st.title("🌌 Kronos V20.3 旗舰量化终端")
+st.title("🌌 Kronos 量化终端")
 
 user_config = ConfigManager.load_config()
 
