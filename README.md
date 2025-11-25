@@ -70,6 +70,20 @@ streamlit run app.py
 *   `config_manager.py`: 用户配置管理。
 *   `model/`: Kronos 模型网络结构定义。
 
+从hugginface 下载Kronos模型
+from huggingface_hub import snapshot_download
+
+# Models
+snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-base")
+snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-mini")
+snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-small")
+
+# Tokenizers
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-base")
+
+print("Raw model files downloaded successfully!")
+
     data_repo/: 本地数据仓库 (自动生成)
 
 ⚠️ 免责声明
