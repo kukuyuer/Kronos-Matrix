@@ -41,20 +41,35 @@ code Text
 
     
 Kronos/
+
 ├── app.py                  # 主程序入口 (Streamlit)
+
 ├── market_updater.py       # 数据更新器 (多线程爬虫)
+
 ├── stock_data_provider.py  # 数据提供层 (DataCenter API)
+
 ├── data_layer.py           # K线数据层
+
 ├── proxy_manager.py        # 代理池管理器
+
 ├── config_manager.py       # 配置管理器
+
 ├── stock_predictor.py      # 预测模型 (需配合 model/ 文件夹)
+
 ├── strategy_engine.py      # 策略引擎
+
 ├── quant_engine.py         # 量化指标计算
+
 ├── config.py               # 静态配置
+
 ├── requirements.txt        # 依赖列表 (见下文)
+
 └── data_repo/              # 数据存放目录 (自动生成)
+
     ├── daily/
+    
     ├── market_snapshot_full.csv
+    
     └── ...
 
   
@@ -111,6 +126,8 @@ code Bash
     
 python market_updater.py
 
+####只影响选股工厂下的功能，不更新也不影响深度融合台使用
+
   
 
     选择 1 进行全量更新。
@@ -121,6 +138,8 @@ python market_updater.py
 
 方法 B：在 UI 中运行
 启动 App 后，在侧边栏 "5. 💾 数据维护" 中点击 "🚀 全量更新"。
+####只影响选股工厂下的功能，不更新也不影响深度融合台使用
+
 第二步：启动终端
 
 在终端中运行：
@@ -138,7 +157,7 @@ streamlit run app.py
 
     在左侧侧边栏展开 "4. 🌐 网络与代理池"。
 
-    在文本框中粘贴代理 IP（格式：http://ip:port，每行一个）。
+    在文本框中粘贴代理 IP（格式：http://ip:port，每行一个，目前配置文件中包含了3000+的代理池，默认即可）。
 
     点击 "➕ 添加至代理池"。
 
@@ -150,7 +169,7 @@ streamlit run app.py
 
     选择提供商 (如 Google Gemini, DeepSeek)。
 
-    输入对应的 API Key。
+    输入对应的 API Key。（aistudio.google 申请即可，没测试过deepseek,如果默认的不能使用，修改接口地址即可）
 
     点击 "💾 保存配置"。
 
@@ -163,7 +182,9 @@ streamlit run app.py
 
     选中：在表格中点击任意一行股票，系统会自动锁定该股票代码。
 
-2. 深度融合台
+   ######必须update一次才可以正常使用
+
+3. 深度融合台
 
 切换到 "📈 深度融合台" 标签页：
 
@@ -174,6 +195,8 @@ streamlit run app.py
     深度 F10：向下滚动查看 "📖 深度 F10 档案"，包含核心题材、主营业务和价值资讯。
 
     AI 研报：点击 "🧠 生成深度研报"，AI 将综合页面上的所有数据为您生成分析报告。
+
+    ######不需要update也可以正常使用，左侧输入股票代码即可
 
 ❓ 常见问题排查
 
