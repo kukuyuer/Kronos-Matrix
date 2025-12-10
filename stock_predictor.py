@@ -49,7 +49,7 @@ class StockPredictor:
         self.font_file = font_file
         self.verbose = verbose
         
-        # --- 字体智能初始化 (保留 V16 的强力逻辑) ---
+        # --- 字体智能初始化 ---
         self.custom_font = self._find_chinese_font()
         plt.rcParams['axes.unicode_minus'] = False
         
@@ -125,7 +125,7 @@ class StockPredictor:
         y_ts_series = pd.Series(y_timestamp).reset_index(drop=True)
         for i in range(self.n_predictions):
             try:
-                pred_df = self.predictor.predict(df=x_df, x_timestamp=x_timestamp, y_timestamp=y_ts_series, pred_len=self.pred_len, T=0.6, top_p=0.9, sample_count=1, verbose=False)
+                pred_df = self.predictor.predict(df=x_df, x_timestamp=x_timestamp, y_timestamp=y_ts_series, pred_len=self.pred_len, T=0.7, top_p=0.9, sample_count=3, verbose=False)
                 pred_df['timestamps'] = y_timestamp
                 all_preds.append(pred_df)
             except Exception as e: print(f"预测失败: {e}")
@@ -239,7 +239,7 @@ class StockPredictor:
             
         if self.verbose: print(f"✅ 详细数据已保存至: {save_path}")
 
-    # --- 增强版绘图 (融合 V16 和 ML版) ---
+    # --- 增强版绘图 ---
     def create_plots(self, historical_df, pred_dfs, stats_results, y_true_df=None):
         if not pred_dfs: return
         

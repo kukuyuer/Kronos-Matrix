@@ -4,55 +4,110 @@ import numpy as np
 from openai import OpenAI
 import google.generativeai as genai 
 
+# ==========================================
+# 1. 回测引擎 (Backtester) - 之前丢失的部分
+# ==========================================
 class Backtester:
-    """回测引擎 (保持不变)"""
+    """简单的回测引擎"""
     @staticmethod
     def run_backtest(df, predictions, initial_capital=100000):
-        if df is None or predictions is None: return None
+        """
+        简单的策略回测：
+        如果 预测明日涨幅 > 0.3% -> 买入/持有
+        如果 预测明日跌幅 > 0.3% -> 卖出/空仓
+        """
+        # 简单校验数据
+        if df is None or predictions is None:
+            return None
+
+        # 确保数据对齐（取最后 N 天的实际值和预测值）
+        # 如果 predictions 是 list of DataFrames (Kronos 的输出格式)，需要先处理
         if isinstance(predictions, list):
+            # 取均值合并
             try:
+                if len(predictions) == 0: return None
                 pred_concat = pd.concat(predictions)
+                # 按时间戳分组取均值
                 pred_df = pred_concat.groupby('timestamps', as_index=False)['close'].mean()
-            except: return None
-        else: pred_df = predictions
+            except:
+                return None
+        else:
+            pred_df = predictions
+
+        # 统一时间格式
+        df = df.copy()
+        pred_df = pred_df.copy()
         df['timestamps'] = pd.to_datetime(df['timestamps'])
         pred_df['timestamps'] = pd.to_datetime(pred_df['timestamps'])
+        
+        # 合并数据: 真实数据(df) 和 预测数据(pred_df)
         merged = pd.merge(df, pred_df, on='timestamps', how='inner', suffixes=('_real', '_pred'))
-        if merged.empty: return None
+        
+        if merged.empty:
+            return None
+            
         capital = initial_capital
-        position = 0 
+        position = 0 # 0=空仓, >0=持股数
         history = []
+        
         for i in range(len(merged) - 1):
             today = merged.iloc[i]
+            # 明日的预测价 vs 今天的实际收盘价
             curr_price = today['close_real']
             next_pred = merged.iloc[i+1]['close_pred']
+            
+            # 策略逻辑
             predicted_change = (next_pred - curr_price) / curr_price
+            
             action = "HOLD"
-            if predicted_change > 0.003 and position == 0: 
+            if predicted_change > 0.003 and position == 0: # 预期涨超 0.3% 且空仓 -> 买入
                 position = capital / curr_price
                 capital = 0
                 action = "BUY"
-            elif predicted_change < -0.003 and position > 0:
+            elif predicted_change < -0.003 and position > 0: # 预期跌超 0.3% 且持仓 -> 卖出
                 capital = position * curr_price
                 position = 0
                 action = "SELL"
+            
+            # 记录资产净值
             total_asset = capital + (position * curr_price)
-            history.append({'date': today['timestamps'], 'price': curr_price, 'action': action, 'total_asset': total_asset, 'pred_change': predicted_change})
+            history.append({
+                'date': today['timestamps'],
+                'price': curr_price,
+                'action': action,
+                'total_asset': total_asset,
+                'pred_change': predicted_change
+            })
+            
         res_df = pd.DataFrame(history)
         if res_df.empty: return None
+
+        # 计算统计指标
         initial = initial_capital
         final = res_df.iloc[-1]['total_asset']
         returns = (final - initial) / initial * 100
+        
+        # 计算胜率
         res_df['real_change'] = res_df['price'].pct_change().shift(-1)
         correct_preds = res_df[res_df['pred_change'] * res_df['real_change'] > 0]
         win_rate = len(correct_preds) / len(res_df) * 100 if len(res_df) > 0 else 0
-        metrics = {'total_return': returns, 'win_rate': win_rate, 'final_asset': final, 'trade_count': len(res_df[res_df['action'].isin(['BUY', 'SELL'])])}
+        
+        metrics = {
+            'total_return': returns,
+            'win_rate': win_rate,
+            'final_asset': final,
+            'trade_count': len(res_df[res_df['action'].isin(['BUY', 'SELL'])])
+        }
+        
         return res_df, metrics
 
+
+# ==========================================
+# 2. AI 投资顾问 (LLMAdvisor)
+# ==========================================
 class LLMAdvisor:
     """
     支持 OpenAI 和 Google Gemini 的投资顾问
-    V17.3 修复版：正确识别 UI 传来的 Provider 字符串
     """
     def __init__(self, api_key, provider="Google Gemini", model_name="gemini-1.5-flash", base_url=None):
         self.provider = provider
@@ -62,13 +117,13 @@ class LLMAdvisor:
 
         if not api_key: return
 
-        # --- 【核心修复】字符串匹配逻辑 ---
+        # --- 识别是否使用 Google 官方 SDK ---
         # 只要 provider 包含 "官方SDK" 或者 严格等于 "Google Gemini"
         if "官方SDK" in provider or provider == "Google Gemini":
             self.is_google_sdk = True
             try:
                 genai.configure(api_key=api_key)
-                # 尝试初始化指定模型，如果失败则回退
+                # 尝试初始化指定模型
                 try:
                     self.gemini_model = genai.GenerativeModel(model_name)
                 except:
@@ -112,7 +167,7 @@ class LLMAdvisor:
         """
 
         try:
-            # 使用 flag 判断，而不是字符串匹配，更稳健
+            # 使用 flag 判断
             if self.is_google_sdk:
                 if self.gemini_model:
                     try:

@@ -1,110 +1,104 @@
+
+
 # -*- coding: utf-8 -*-
 import pandas as pd
 import os
-import efinance as ef
-import akshare as ak
 import config
-import datetime
+import requests
+import json
 
 class DataLayer:
-    """V4 数据层：支持复权隔离 & 数据完整性修复"""
+    """数据层：东方财富 K 线接口 (替代新浪)"""
     
     def __init__(self):
-        # 复权映射：efinance 1=前复权, 2=后复权, 0=不复权
-        self.ADJUST_MAP = {
-            "前复权": 1,
-            "后复权": 2,
-            "不复权": 0
-        }
-        # 文件后缀映射
-        self.SUFFIX_MAP = {
-            "前复权": "qfq",
-            "后复权": "hfq",
-            "不复权": "none"
-        }
+        self.ADJUST_MAP = {"前复权": 1, "后复权": 2, "不复权": 0}
+        self.SUFFIX_MAP = {"前复权": "qfq", "后复权": "hfq", "不复权": "none"}
 
-    def get_kline(self, stock_code, k_type='101', source='efinance', adjust='前复权', force_update=False):
+    def _get_eastmoney_kline(self, code, k_type, adjust_type):
         """
-        获取K线数据，确保包含 'amount' (成交额)
+        调用东方财富 K 线接口 (替代原新浪)
+        """
+        # 1. 市场标识转换 (1=沪, 0=深/北)
+        # 00开头(深), 30开头(创业), 60/68开头(沪), 4/8开头(北)
+        secid_prefix = "1" if str(code).startswith("6") else "0"
+        secid = f"{secid_prefix}.{code}"
+
+        # 2. 周期转换 
+        # Config映射: 101=日, 102=周, 5=5分...
+        # 东财映射: 101=日, 102=周, 103=月, 5=5分, 15=15分, 30=30分, 60=60分
+        klt = str(k_type) if str(k_type) in ['5', '15', '30', '60', '101', '102'] else '101'
+
+        # 3. 复权转换 (1=前复权, 2=后复权, 0=不复权)
+        fqt_map = {"前复权": "1", "后复权": "2", "不复权": "0"}
+        fqt = fqt_map.get(adjust_type, "1")
+
+        # 4. 构建URL
+        # f51:日期, f52:开, f53:收, f54:高, f55:低, f56:量, f57:额
+        fields = "f51,f52,f53,f54,f55,f56,f57"
+        # lmt=1023 获取最近1023根
+        url = f"http://push2his.eastmoney.com/api/qt/stock/kline/get?secid={secid}&klt={klt}&fqt={fqt}&lmt=1023&end=20500101&iscca=1&fields1=f1,f2,f3,f4,f5,f6,f7,f8&fields2={fields}"
+
+        try:
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                data_json = resp.json()
+                if data_json and data_json.get('data') and data_json['data'].get('klines'):
+                    rows = data_json['data']['klines']
+                    parsed_data = []
+                    for row in rows:
+                        vals = row.split(',')
+                        if len(vals) >= 7:
+                            parsed_data.append({
+                                'timestamps': vals[0],
+                                'open': float(vals[1]),
+                                'close': float(vals[2]),
+                                'high': float(vals[3]),
+                                'low': float(vals[4]),
+                                'volume': float(vals[5]),
+                                'amount': float(vals[6])
+                            })
+                    
+                    df = pd.DataFrame(parsed_data)
+                    df['timestamps'] = pd.to_datetime(df['timestamps'])
+                    return df
+        except Exception as e:
+            print(f"EastMoney K-Line Error: {e}")
+        
+        return pd.DataFrame()
+
+    def get_kline(self, stock_code, k_type='101', source='eastmoney', adjust='前复权', force_update=False):
+        """
+        获取 K 线 (强制走东方财富通道)
         """
         conf = config.K_TYPE_MAP.get(str(k_type))
-        if not conf: return None
+        if not conf: return None, {}
         
-        # 文件名加入复权后缀
         suffix = self.SUFFIX_MAP.get(adjust, "qfq")
-        adjust_code = self.ADJUST_MAP.get(adjust, 1)
-        
         file_name = f"{stock_code}_{suffix}.csv"
         file_path = os.path.join(conf['path'], file_name)
         
-        # 1. 检查本地 (如果 force_update 为 False 且文件存在)
+        # 1. 检查本地缓存
         if os.path.exists(file_path) and not force_update:
-            # 预读检查是否包含 amount 列
-            try:
-                check_df = pd.read_csv(file_path, nrows=1)
-                if 'amount' in check_df.columns:
-                    return file_path
-                else:
-                    print(f"⚠️ 本地缓存 {file_name} 缺少 amount 列，触发强制更新...")
-            except:
-                pass # 读取失败也强制更新
+            # 简单策略：如果文件存在且非强制更新，可视为有效（生产环境可加时间判断）
+            # 这里为了保证数据新鲜，如果有force_update会跳过
+            pass 
 
-        # 2. 下载 (传入复权参数)
-        print(f"📥 下载: {stock_code} ({adjust}) Source: {source}")
-        try:
-            df = pd.DataFrame()
-            if source == 'efinance':
-                # efinance 的 fqt 参数控制复权
-                df = ef.stock.get_quote_history(
-                    stock_codes=stock_code, 
-                    klt=conf['ef_code'],
-                    fqt=adjust_code 
-                )
-            elif source == 'akshare':
-                # AkShare 的 adjust 参数
-                ak_adjust = "qfq" if adjust == "前复权" else ("hfq" if adjust == "后复权" else "")
-                if conf['ak_freq'] == 'daily':
-                    end_d = datetime.datetime.now().strftime("%Y%m%d")
-                    start_d = (datetime.datetime.now() - datetime.timedelta(days=365 * 3)).strftime("%Y%m%d") # Fetch 3 years of data by default
-                    df = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_d, end_date=end_d, adjust=ak_adjust)
-            
-            # 3. 数据清洗
-            if df is not None and not df.empty:
-                rename_map = {
-                    '日期': 'timestamps', 'date': 'timestamps',
-                    '开盘': 'open', '收盘': 'close', '最高': 'high', '最低': 'low',
-                    '成交量': 'volume',
-                    '成交额': 'amount'
-                }
-                df = df.rename(columns=rename_map)
-                
-                # 容错处理：如果数据源没有 'amount'，用 收盘价 * 成交量 估算
-                if 'amount' not in df.columns:
-                    if 'close' in df.columns and 'volume' in df.columns:
-                        df['amount'] = df['close'] * df['volume']
-                    else:
-                        df['amount'] = 0.0
-
-                # 确保保留所有核心列
-                cols_to_keep = ['timestamps', 'open', 'close', 'high', 'low', 'volume', 'amount']
-                final_cols = [c for c in cols_to_keep if c in df.columns]
-                df = df[final_cols]
-                
-                # 保存
-                df.to_csv(file_path, index=False)
-                return file_path
-                
-        except Exception as e:
-            print(f"下载/清洗失败: {e}")
-            
-        # 如果下载失败，且本地有旧文件，尝试返回旧文件
-        return file_path if os.path.exists(file_path) else None
-
-    def get_market_list(self):
-        path = os.path.join(config.DIR_MARKET, 'stock_list.csv')
-        if os.path.exists(path): return pd.read_csv(path, dtype={'代码': str})
-        try:
-            df = ef.stock.get_latest_quote()
-            df.to_csv(path, index=False)
-            return df
-        except: return pd.DataFrame()
+        # 2. 强制下载 (使用东方财富)
+        # print(f"📥 [EastMoney] 下载 {stock_code} ({k_type})...")
+        df = self._get_eastmoney_kline(stock_code, k_type, adjust)
+        
+        if df is not None and not df.empty:
+            # 确保目录存在
+            os.makedirs(conf['path'], exist_ok=True)
+            df.to_csv(file_path, index=False)
+            return file_path, {
+                "status": "realtime",
+                "last_time": str(df['timestamps'].iloc[-1]),
+                "rows": len(df)
+            }
+        
+        # 3. 失败回退本地
+        if os.path.exists(file_path):
+             return file_path, {"status": "cache_stale", "last_time": "unknown", "rows": 0}
+             
+        return None, {}
