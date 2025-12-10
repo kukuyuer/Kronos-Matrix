@@ -201,11 +201,11 @@ streamlit run app.py
 
 ❓ 常见问题排查
 
-Q1: 启动后报错 FileNotFoundError: market_snapshot_full.csv
+#Q1: 启动后报错 FileNotFoundError: market_snapshot_full.csv
 
     解决：请先运行 python market_updater.py 完成第一次数据初始化。
 
-Q2: 深度融合台显示 "暂无题材数据" 或 "N/A"
+#Q2: 深度融合台显示 "暂无题材数据" 或 "N/A"
 
     原因：本地 IP 可能被东方财富暂时限制，或者该股票为次新股/特殊标的。
 
@@ -215,11 +215,11 @@ Q2: 深度融合台显示 "暂无题材数据" 或 "N/A"
 
         检查 stock_data_provider.py 是否为 V1.0 版本（支持混合接口）。
 
-Q3: 输入股票代码时界面卡顿
+#Q3: 输入股票代码时界面卡顿
 
     解决：这是 Streamlit 的特性。请确保一次性输入完整的 6 位代码并回车。V1.0 版本已加入防抖逻辑，只有输入满 6 位数字时才会触发刷新。
 
-Q4: 代理池全部显示 "冷却中"
+#Q4: 代理池全部显示 "冷却中"
 
     解决：说明您添加的代理质量较差或已失效。
 
@@ -229,25 +229,25 @@ Q4: 代理池全部显示 "冷却中"
 
         如果没有好代理，请保持代理池为空，程序会自动回退到 本机直连 模式（Market Updater 会自动轮询域名，通常也能成功）。
 
-Q5：Kronos无法下载 
+#Q5：Kronos无法下载 
     解决：国内通过huggingface下载，通过以下方式可以成功
         模型目录是：Kronos/NeoQuasar
 
 from huggingface_hub import snapshot_download
 
-# Models
+ Models
 snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="./Kronos/NeoQuasar/Kronos-base")
 snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="./Kronos/NeoQuasar/Kronos-mini")
 snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="./Kronos/NeoQuasar/Kronos-small")
 
-# Tokenizers
+ Tokenizers
 snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
 snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-base")
 
 print("Raw model files downloaded successfully!")
 
 
-Q6：怎样使用GPU
+#Q6：怎样使用GPU
     解决：修改stock_predictor.py第85行将cpu改为cuda:0
     修改前
     self.predictor = KronosPredictor(self.model, self.tokenizer, device="cpu", max_context=512)
