@@ -1,6 +1,7 @@
 🛡️ Kronos 终端 (V1.0)
 
-Kronos 是一个基于 Python 和 Streamlit 构建的高级 A 股分析终端。它集成了全市场选股筛选器、深度 F10 基本面分析、资金流向监控、Kronos 时序预测模型以及基于 LLM (大语言模型) 的智能研报生成功能。
+Kronos 是一个基于 Python 和 Streamlit 构建的高级 A 股分析终端。它集成了全市场选股筛选器、深度 F10 基本面分析、资金流向监控、Kronos(默认使用CPU） 时序预测模型以及基于 LLM (大语言模型) 的智能研报生成功能。
+不要问为什么默认不使用GPU,因为我没有@@，后面有修改方法。
 
 V1.0 版本重点增强了数据获取的稳定性（多线程代理池、死磕补录机制）以及 UI 的响应速度（多级缓存）。
 ✨ 核心功能
@@ -227,6 +228,32 @@ Q4: 代理池全部显示 "冷却中"
         或者清空代理池，添加新的高质量代理。
 
         如果没有好代理，请保持代理池为空，程序会自动回退到 本机直连 模式（Market Updater 会自动轮询域名，通常也能成功）。
+
+Q5：Kronos无法下载 
+    解决：国内通过huggingface下载，通过以下方式可以成功
+        模型目录是：Kronos/NeoQuasar
+
+from huggingface_hub import snapshot_download
+
+# Models
+snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="./Kronos/NeoQuasar/Kronos-base")
+snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="./Kronos/NeoQuasar/Kronos-mini")
+snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="./Kronos/NeoQuasar/Kronos-small")
+
+# Tokenizers
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
+snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-base")
+
+print("Raw model files downloaded successfully!")
+
+
+Q6：怎样使用GPU
+    解决：修改stock_predictor.py第85行将cpu改为cuda:0
+    修改前
+    self.predictor = KronosPredictor(self.model, self.tokenizer, device="cpu", max_context=512)
+    修改后
+    self.predictor = KronosPredictor(self.model, self.tokenizer, device="cuda:0", max_context=512)
+
 
 ⚠️ 免责声明
 
