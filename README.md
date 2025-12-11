@@ -75,46 +75,6 @@ Kronos/
 
   
 
-3. 创建虚拟环境 (推荐)
-code Bash
-
-    
-# 创建虚拟环境
-conda create -n kronos python=3.10
-# 激活环境
-conda activate kronos
-
-  
-
-4. 安装依赖
-
-请在项目根目录下创建一个 requirements.txt 文件，内容如下：
-code Text
-
-    
-streamlit>=1.30.0
-pandas>=2.0.0
-requests>=2.31.0
-plotly>=5.18.0
-efinance>=0.0.7
-akshare>=1.12.0
-scikit-learn
-scipy
-pandas_ta
-google-generativeai
-openai
-tqdm
-matplotlib
-
-  
-
-然后运行安装命令：
-code Bash
-
-    
-pip install -r requirements.txt
-
-  
 
 🚀 部署与使用指南
 第一步：初始化数据 (至关重要)
