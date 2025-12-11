@@ -234,18 +234,28 @@ streamlit run app.py
     解决：国内通过huggingface下载，通过以下方式可以成功
         模型目录是：Kronos/NeoQuasar
 
-from huggingface_hub import snapshot_download
+    conda 虚拟环境下：
+    export HF_ENDPOINT="https://hf-mirror.com"
+    mkdir -p ./kronos/NeoQuasar/Kronos-base
+    mkdir -p ./kronos/NeoQuasar/Kronos-mini
+    mkdir -p ./kronos/NeoQuasar/Kronos-small
+    mkdir -p ./kronos/NeoQuasar/Kronos-Tokenizer-2k
+    mkdir -p ./kronos/NeoQuasar/Kronos-Tokenizer-base
 
- Models
-snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="./Kronos/NeoQuasar/Kronos-base")
-snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="./Kronos/NeoQuasar/Kronos-mini")
-snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="./Kronos/NeoQuasar/Kronos-small")
+    将以下内容写入py脚本，然后执行，注意要提前创建目录
+    
+    from huggingface_hub import snapshot_download
 
- Tokenizers
-snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-2k")
-snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="/home/huanglzh/Kronos/NeoQuasar/Kronos-Tokenizer-base")
+     #Models
+    snapshot_download(repo_id="NeoQuasar/Kronos-base", local_dir="./kronos/NeoQuasar/Kronos-base")
+    snapshot_download(repo_id="NeoQuasar/Kronos-mini", local_dir="./kronos/NeoQuasar/Kronos-mini")
+    snapshot_download(repo_id="NeoQuasar/Kronos-small", local_dir="./kronos/NeoQuasar/Kronos-small")
 
-print("Raw model files downloaded successfully!")
+     #Tokenizers
+    snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-2k", local_dir="./kronos/NeoQuasar/Kronos-Tokenizer-2k")
+    snapshot_download(repo_id="NeoQuasar/Kronos-Tokenizer-base", local_dir="./kronos/NeoQuasar/Kronos-Tokenizer-base")
+
+    print("Raw model files downloaded successfully!")
 
 
 #Q6：怎样使用GPU
