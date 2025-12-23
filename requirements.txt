@@ -1,0 +1,12 @@
+streamlit
+pandas
+numpy
+matplotlib
+plotly
+scikit-learn
+pandas_ta
+efinance
+akshare
+openai
+google-generativeai
+tqdm

@@ -1,0 +1,46 @@
+# --- 1. 默认忽略所有文件 ---
+*
+
+# --- 2. 显式允许根目录的核心代码 ---
+!app.py
+!config.py
+!config_manager.py
+!data_layer.py
+!market_updater.py
+!quant_engine.py
+!stock_data_provider.py
+!stock_predictor.py
+!strategy_engine.py
+!requirements.txt
+!README.md
+!.gitignore
+
+# --- 3. 显式允许 model 目录及其源码 (必须保留结构定义) ---
+!model/
+!model/*.py
+
+# --- 4. 再次强制忽略不需要的目录 (防止误伤) ---
+webui/
+NeoQuasar/
+data_repo/
+stock_data/
+output/
+plots/
+static/
+figures/
+AData_*/
+finetune_csv/
+examples/
+tests/
+__pycache__/
+*.pyc
+*.ipynb
+.DS_Store
+.vscode/
+.idea/
+user_config*.json
+*.csv
+*.log
+*.zip
+*.ttf
+*.otf
